@@ -26,6 +26,21 @@ class Sender {
     set_exception_handler(array('Sender', 'ExceptionHandler'));
   }
 
+class Sender {
+  /**
+   * Curl Parallel object
+   * @var CurlParallel
+   */
+  private $cm;
+
+  function __construct() {
+    $this->cm = new CurlParallel();
+    set_exception_handler(array('Sender', 'ExceptionHandler'));
+  }
+    set_exception_handler(array('Sender', 'ExceptionHandler'));
+  }
+>>>>>>> d83fc8713a17909c9e3eb6c281ce595358dcbd01
+
   /**
    * log execution
    * @param string $string
@@ -41,6 +56,7 @@ class Sender {
    * 
    * @param string $url
    * @param iSenderConsumer $caller
+<<<<<<< HEAD
    */
   public function addRecipient($url, iSenderConsumer $caller) {
 
@@ -60,11 +76,33 @@ class Sender {
   public function execute() {
     $this->cm->RunAll();
   }
+=======
+   */
+  public function addRecipient($url, iSenderConsumer $caller) {
+
+    $curlo = new Curl($url);
+    $curlo->header = 1;
+    $caller->setCurlParams($curlo);
+
+    $curlo->setCallbackFun(array($this,'executedCurl'));
+    $curlo->setCallbackArgs(array($curlo,$caller));
+
+    $this->cm->add($curlo);
+    //$curlres = $curlo->fetch();
+
+    //ParseNotification::markAsSent($rids);
+  }
+
+  public function execute() {
+    $this->cm->RunAll();
+  }
+>>>>>>> d83fc8713a17909c9e3eb6c281ce595358dcbd01
 
   /**
    * consume the response
    * @param Curl $curlo
    * @param SenderConsumer $caller
+<<<<<<< HEAD
    */
   public function executedCurl(Curl $curlo, iSenderConsumer $caller) {
     $response = $curlo->fetchObj();
@@ -91,6 +129,34 @@ class Sender {
   }
 }
 
+=======
+   */
+  public function executedCurl(Curl $curlo, iSenderConsumer $caller) {
+    $response = $curlo->fetchObj();
+    $caller->consumeCurlResponse($response);
+  }
+
+  public static function ExceptionHandler(Exception $e) {
+    if(get_class($e)=='ESApiException') {
+      if($e->object!= NULL && is_numeric($e->object)) {
+        print "error";
+      }
+    }
+    //ErrorLogger::log($e);
+    $output = Output::getInstance();
+    if($output) {
+      $output->setError($e);
+      //print "ERROR\n";
+      $output->output();
+    } else {
+      if(get_class($e)!='ErrorException') {
+        self::printError($e);
+      }
+    }
+  }
+}
+
+>>>>>>> d83fc8713a17909c9e3eb6c281ce595358dcbd01
 interface iSenderConsumer {
    public function setCurlParams(Curl $curlo);
    public function consumeCurlResonse(stdClass $object);
