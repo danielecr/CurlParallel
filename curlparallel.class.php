@@ -213,10 +213,8 @@ class CurlParallel
 	{
 	  if ( false !== $key = array_search($this->ch, $ch) ) {
 			unset($this->ch[$key]);
-			curl_multi_remove_handle($this->mh, $ch);
-		}
-		if ( false !== $key = array_search($this->curlObjs, $curlObj) ) {
 			unset($this->curlObjs[$key]);
+			curl_multi_remove_handle($this->mh, $ch);
 		}
 	}
 	
@@ -229,7 +227,7 @@ class CurlParallel
 	    $status = curl_multi_exec($this->mh, $active);
 	    $info = curl_multi_info_read($this->mh);
 	    if (false !== $info) {
-	      //var_dump($info);
+	      var_dump($info);
 	      $handler = $info['handle'];
 	      if ( false !== $key = array_search($handler,$this->ch) ) {
 	        if($this->curlObjs[$key] instanceof Curl) {

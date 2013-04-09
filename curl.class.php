@@ -121,7 +121,13 @@ class Curl
 	 * @var string
 	 */
 	const VERSION = '0.3';
-
+	
+	/**
+	 * the url to connect to or connected to
+	 * @var string
+	 */
+	private $url = '';
+	
 	/**
 	 * Create the new {@link Curl} object, with the
 	 * optional URL parameter.
@@ -136,21 +142,23 @@ class Curl
 		if ( !extension_loaded('curl') )
 			throw new ErrorException("cURL library is not loaded. Please recompile PHP with the cURL library.");
 
-		// Create the cURL resource
-		$this->ch = curl_init();
 
 		// Set some default options
 		$this->url = $url;
 		$this->returntransfer = true;
 
 		//curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($this->ch, CURLOPT_CAPATH, dirname(__DIR__)."/CERTS");
+		//curl_setopt($this->ch, CURLOPT_CAPATH, dirname(__DIR__)."/CERTS");
 		if(defined('CERTDIR')) {
 		  //$this->capath = CERTDIR;
 		}
 		// Applications can override this User Agent value
 		$this->useragent = 'OOCurl '.self::VERSION;
 
+		if($this->url != NULL) {
+		  // Create the cURL resource
+		  $this->ch = curl_init();
+		}
 		
 		// Return $this for chaining
 		return $this;
@@ -181,7 +189,7 @@ class Curl
 		// init a new cURL session
 		$this->ch = curl_init();
 
-		curl_setopt($this->ch, CURLOPT_CAPATH, dirname(__DIR__)."/CERTS");
+		//curl_setopt($this->ch, CURLOPT_CAPATH, dirname(__DIR__)."/CERTS");
 		// reset all the values that were already set
 		foreach ( $this->curlopt as $const => $value ) {
 			curl_setopt($this->ch, constant($const), $value);
@@ -278,6 +286,8 @@ class Curl
   public function fetchObj() {
     $obj = new stdClass();
     $data = $this->fetch();
+    print $data;
+    print "ALLL\n";
     if(isset($this->header)) {
       $pieces = preg_split('/\r\n\r\n/',$data);
       //drupal_set_message(__FILE__.':'.__LINE__.' '.print_r($pieces,TRUE));
@@ -304,6 +314,7 @@ class Curl
       //array_shift($pieces);
       //$obj->content = implode("\r\n",$pieces);
       $headers = preg_split("/\r\n/",$obj->row_headers);
+      $obj->header_first_row = $headers[0];
       $obj->headers = array();
       foreach($headers as $i => $line) {
         if(preg_match('/^([^:]*):\ (.*)$/',$line,$matches)) {
@@ -346,6 +357,13 @@ class Curl
 		return json_decode($this->fetch(), $array);
 	}
 
+	/**
+	 * return the url used in the last communication (or near to be used)
+	 * @return string the url
+	 */
+	public function getUrl() {
+	  return $this->url;
+	}
 
 	/**
 	 * Close the cURL session and free the resource.

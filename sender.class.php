@@ -13,6 +13,8 @@
  * @license http://www.opensource.org/licenses/mit-license.php
  */
 
+require_once "curlparallel.class.php";
+require_once "curl.class.php";
 
 class Sender {
   /**
@@ -23,7 +25,7 @@ class Sender {
 
   function __construct() {
     $this->cm = new CurlParallel();
-    set_exception_handler(array('Sender', 'ExceptionHandler'));
+    //set_exception_handler(array('Sender', 'ExceptionHandler'));
   }
 
   /**
@@ -41,20 +43,19 @@ class Sender {
    * 
    * @param string $url
    * @param iSenderConsumer $caller
+   * @return Curl the curl object created for possibly set parameter before start sending
    */
   public function addRecipient($url, iSenderConsumer $caller) {
 
     $curlo = new Curl($url);
     $curlo->header = 1;
-    $caller->setCurlParams($curlo);
 
     $curlo->setCallbackFun(array($this,'executedCurl'));
     $curlo->setCallbackArgs(array($curlo,$caller));
 
     $this->cm->add($curlo);
-    //$curlres = $curlo->fetch();
-
-    //ParseNotification::markAsSent($rids);
+    
+    return $curlo;
   }
 
   public function execute() {
@@ -68,30 +69,19 @@ class Sender {
    */
   public function executedCurl(Curl $curlo, iSenderConsumer $caller) {
     $response = $curlo->fetchObj();
-    $caller->consumeCurlResponse($response);
+    print_r($response);
+    $caller->consumeCurlResponse($response,$curlo);
   }
-
+  
   public static function ExceptionHandler(Exception $e) {
-    if(get_class($e)=='ESApiException') {
-      if($e->object!= NULL && is_numeric($e->object)) {
-        print "error";
-      }
-    }
-    //ErrorLogger::log($e);
-    $output = Output::getInstance();
-    if($output) {
-      $output->setError($e);
-      //print "ERROR\n";
-      $output->output();
-    } else {
-      if(get_class($e)!='ErrorException') {
-        self::printError($e);
-      }
-    }
+    print $e->getTraceAsString();
   }
 }
 
 interface iSenderConsumer {
-   public function setCurlParams(Curl $curlo);
-   public function consumeCurlResonse(stdClass $object);
+  /**
+   * consume the response object elaborated by the sender
+   * @param stdClass $object
+   */
+  public function consumeCurlResponse(stdClass $object,Curl $curlo = NULL);
 }
