@@ -60,6 +60,8 @@ if(defined('MAINPATH')) {
  */
 //use Zend\Translator\Adapter\ArrayAdapter;
 
+require_once "httpresponse.class.php";
+
 class Curl
 {
 	/**
@@ -145,6 +147,11 @@ class Curl
 
 		// Set some default options
 		$this->url = $url;
+		if($this->url != NULL) {
+		  // Create the cURL resource
+		  $this->ch = curl_init($this->url);
+		}
+		
 		$this->returntransfer = true;
 
 		//curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -155,10 +162,6 @@ class Curl
 		// Applications can override this User Agent value
 		$this->useragent = 'OOCurl '.self::VERSION;
 
-		if($this->url != NULL) {
-		  // Create the cURL resource
-		  $this->ch = curl_init();
-		}
 		
 		// Return $this for chaining
 		return $this;
@@ -286,43 +289,10 @@ class Curl
   public function fetchObj() {
     $obj = new stdClass();
     $data = $this->fetch();
-    print $data;
-    print "ALLL\n";
     if(isset($this->header)) {
-      $pieces = preg_split('/\r\n\r\n/',$data);
-      //drupal_set_message(__FILE__.':'.__LINE__.' '.print_r($pieces,TRUE));
-      $inHeader = TRUE;
-      $obj->content = '';
-      foreach($pieces as $piece) {
-        if($inHeader) {
-          if(!isset($obj->row_headers)) {
-            $obj->row_headers = $piece;
-          } else {
-            $obj->row_headers .= "\r\n" .$piece;
-          }
-        } else {
-          if(!isset($obj->content)) {
-            $obj->content = $piece;
-          } else {
-            $obj->content .= "\r\n" .$piece;
-          }
-        }
-        // notice (1xx) and redirect (3xx)
-        if(!preg_match('/^HTTP[^\n]*[13][0-9]{2}/',$piece)) $inHeader = FALSE;
-      }
-      //$obj->row_headers = $pieces[0];
-      //array_shift($pieces);
-      //$obj->content = implode("\r\n",$pieces);
-      $headers = preg_split("/\r\n/",$obj->row_headers);
-      $obj->header_first_row = $headers[0];
-      $obj->headers = array();
-      foreach($headers as $i => $line) {
-        if(preg_match('/^([^:]*):\ (.*)$/',$line,$matches)) {
-          $obj->headers[$matches[1]] = $matches[2];
-        }
-      }
+      $obj = new HttpResponse($data,1);
     } else {
-      $obj->content = $this->response;
+      $obj = new HttpResponse($data,0);
     }
     return $obj;
   }

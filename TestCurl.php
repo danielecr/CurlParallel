@@ -11,13 +11,12 @@ class TestCurl implements iSenderConsumer {
     $this->sender = $sender;
     foreach ($this->url_list as $url) {
       if($url == '') continue;
-      print "$url\n";
+      print "$url enqueued\n";
       $curlo = $this->sender->addRecipient($url, $this);
       //print_r($curlo);
       // set parameters option for $curlo ... but even not
       //unset($curlo);
     }
-    $this->sender->execute();
   }
   
   public function readUrls() {
@@ -26,18 +25,23 @@ class TestCurl implements iSenderConsumer {
     $this->url_list = explode("\n", $c);
   }
    
-  public function consumeCurlResponse(stdClass $object,Curl $curlo = NULL) {
+  public function consumeCurlResponse(HttpResponse $object,Curl $curlo = NULL) {
      // I just want to know if all goes right
-     print date('c') . " - ".$object->header_first_row . " with a content of length: " . strlen($object->content) .
-       "requested url: ". $curlo->getUrl() ."\n";
+     print date('c') . " - " .$object->header_first_row. ' - ' .$object->getResponseCode() . " with a content of length: " . strlen($object->content) .
+       " requested url: ". $curlo->getUrl() ."\n";
+     if($object->getResponseCode() != 200) {
+       print $object->content;
+       print $object->raw_headers;
+     }
   }
 
 }
 
-//$sender = new Sender();
-//$tc = new TestCurl($sender);
-//sleep(30);
+$sender = new Sender();
+$tc = new TestCurl($sender);
+$sender->execute();
+sleep(10);
 
-$co = new Curl('http://www.cellularmagazine.it');
-$o = $co->fetch();
-print_r($o);
+//$co = new Curl('http://www.cellularmagazine.it');
+//$o = $co->fetch();
+//print_r($o);

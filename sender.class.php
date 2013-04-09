@@ -69,7 +69,6 @@ class Sender {
    */
   public function executedCurl(Curl $curlo, iSenderConsumer $caller) {
     $response = $curlo->fetchObj();
-    print_r($response);
     $caller->consumeCurlResponse($response,$curlo);
   }
   
@@ -83,5 +82,5 @@ interface iSenderConsumer {
    * consume the response object elaborated by the sender
    * @param stdClass $object
    */
-  public function consumeCurlResponse(stdClass $object,Curl $curlo = NULL);
+  public function consumeCurlResponse(HttpResponse $object,Curl $curlo = NULL);
 }

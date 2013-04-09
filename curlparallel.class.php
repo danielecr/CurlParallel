@@ -227,7 +227,7 @@ class CurlParallel
 	    $status = curl_multi_exec($this->mh, $active);
 	    $info = curl_multi_info_read($this->mh);
 	    if (false !== $info) {
-	      var_dump($info);
+	      //var_dump($info);
 	      $handler = $info['handle'];
 	      if ( false !== $key = array_search($handler,$this->ch) ) {
 	        if($this->curlObjs[$key] instanceof Curl) {
